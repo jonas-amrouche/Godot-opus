@@ -9,12 +9,19 @@ using namespace godot;
 
 void GdOpus::init_opus(){
 	int decoder_err;
-	opusDecoder = opus_decoder_create(sample_rate, 2, &decoder_err);
+	opusDecoder = opus_decoder_create(sample_rate, 1, &decoder_err);
 	ERR_FAIL_COND(decoder_err != OPUS_OK);
 
 	int encoder_err;
-	opusEncoder = opus_encoder_create(sample_rate, 2, OPUS_APPLICATION_VOIP, &encoder_err);	
+	opusEncoder = opus_encoder_create(sample_rate, 1, OPUS_APPLICATION_VOIP, &encoder_err);	
 	ERR_FAIL_COND(encoder_err != OPUS_OK);
+
+	opus_encoder_ctl(opusEncoder, OPUS_SET_BITRATE(bit_rate));
+
+	int actual_bitrate;
+	opus_encoder_ctl(opusEncoder, OPUS_GET_BITRATE(&actual_bitrate));
+
+	UtilityFunctions::print("Opus encoder bitrate set to: ", actual_bitrate);
 
 	opus_encoder_ctl(opusEncoder, OPUS_SET_SIGNAL(OPUS_SIGNAL_VOICE));
 }
@@ -34,7 +41,7 @@ GdOpus::~GdOpus(){
 // 	return (AudioServer::get_singleton()->get_mix_rate()*480)/sample_rate;
 // }
 
-PackedByteArray GdOpus::encode(PackedVector2Array samples){
+PackedByteArray GdOpus::encode(PackedFloat32Array samples){
 
 	int encoder_frame_sample_count = sample_rate*frame_duration;
 	
@@ -57,11 +64,11 @@ PackedByteArray GdOpus::encode(PackedVector2Array samples){
 	return encoded;
 }
 
-PackedVector2Array GdOpus::decode(PackedByteArray packet){
+PackedFloat32Array GdOpus::decode(PackedByteArray packet){
 
 	int decoder_frame_sample_count = sample_rate*frame_duration;
 	
-	PackedVector2Array decoded;
+	PackedFloat32Array decoded;
 
 	decoded.resize(decoder_frame_sample_count);
 
@@ -79,13 +86,14 @@ PackedVector2Array GdOpus::decode(PackedByteArray packet){
 	return decoded;
 }
 
-void GdOpus::config(int new_sample_rate, int frame_duration_ms){
+void GdOpus::config(int new_sample_rate, int frame_duration_ms, int bitrate){
 	
 	opus_decoder_destroy(opusDecoder);
 	opus_encoder_destroy(opusEncoder);
 
 	sample_rate = new_sample_rate;
 	frame_duration = frame_duration_ms/1000.0;
+	bit_rate = bitrate;
 	
 	init_opus();
 }
@@ -98,7 +106,7 @@ void GdOpus::_bind_methods(){
 	// ClassDB::set_method_info("GdOpus", "decode", PropertyInfo(Variant::NIL, ""), "Decode stereo data PackedVector2Array from bytes using Opus.");
 	// ClassDB::bind_method(D_METHOD("get_resampler_input_size"), &GdOpus::get_resampler_input_size);
 	// ClassDB::set_method_info("GdOpus", "get_resampler_input_size", PropertyInfo(Variant::INT, "return_value"), "Return the resampler input size.");
-	ClassDB::bind_method(D_METHOD("config", "new_sample_rate", "new_frame_duration_ms"), &GdOpus::config);
+	ClassDB::bind_method(D_METHOD("config", "new_sample_rate", "new_frame_duration_ms", "new_bitrate"), &GdOpus::config);
 	// ClassDB::set_method_info("GdOpus", "config", PropertyInfo(Variant::NIL, ""), "Configure the encoder to the given sample rate and frame duration (in milliseconds), static method.");
 
 }

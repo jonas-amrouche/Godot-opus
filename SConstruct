@@ -56,7 +56,9 @@ else:
         'godot-cpp/include/gen/', 
         'godot-cpp/classes/'])
     env.Append(LIBPATH=['./lib/bin/linux'])
-    env.Append(LIBS=['opus'])
+    env.Append(LIBS=['libopus'])
+    env.Append(CCFLAGS=['-fPIC'])
+    env.Append(CXXFLAGS=['-fPIC'])
     library = env.SharedLibrary(
         "addons/Godot-opus/libgodotopus{}{}".format(env["suffix"], env["SHLIBSUFFIX"]),
         source=sources,

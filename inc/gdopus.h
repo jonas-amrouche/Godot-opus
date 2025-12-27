@@ -21,15 +21,16 @@ namespace godot {
 			void init_opus();
 			GdOpus();
 			~GdOpus();
-			PackedByteArray encode(PackedVector2Array samples);
-			PackedVector2Array decode(PackedByteArray packet);
+			PackedByteArray encode(PackedFloat32Array samples);
+			PackedFloat32Array decode(PackedByteArray packet);
 			//utility function for resampler
 			// int get_resampler_input_size();
-			void config(int sample_rate, int frame_duration_ms);
+			void config(int sample_rate, int frame_duration_ms, int bitrate);
 	};
 	
 	inline int sample_rate = OPUS_SAMPLE_RATE;
 	inline float frame_duration = OPUS_FRAMEDURATION_MS/1000.0;
+	inline int bit_rate = OPUS_BITRATE;
 }
 
 #endif
